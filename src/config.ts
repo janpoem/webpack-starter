@@ -296,7 +296,7 @@ export class WebpackConfig {
 
   buildOptimization(): WRC['optimization'] {
     const opt = {
-      minimize: this.isDevel,
+      minimize: !this.isDevel,
       ...this.optimization,
     };
     if (opt.minimizer == null) {

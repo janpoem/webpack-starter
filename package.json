@@ -1,6 +1,6 @@
 {
   "name": "@zenstone/webpack-starter",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "files": ["dist"],
   "main": "dist/index.js",
@@ -22,11 +22,9 @@
   "author": "Jiankai Zeng <janpoem@163.com>",
   "license": "MIT",
   "dependencies": {
-    "prettier": "^3.0.2",
     "@swc/helpers": "^0.5.1",
     "@swc/cli": "^0.1.62",
     "@swc/core": "^1.3.77",
-    "cross-env": "^7.0.3",
     "dotenv": "^16.3.1",
     "dotenv-defaults": "^5.0.2",
     "dotenv-webpack": "^8.0.1",
@@ -82,7 +80,8 @@
     "@typescript-eslint/parser": "^6.4.0",
     "@typescript-eslint/eslint-plugin": "^6.4.0",
     "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0"
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.0.2"
   },
   "peerDependencies": {
     "typescript": "^4 || ^5"
