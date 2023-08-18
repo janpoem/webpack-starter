@@ -11,7 +11,11 @@
     "rollup": "rollup -c --bundleConfigAsCjs",
     "build": "pnpm eslint && pnpm tscheck && pnpm rollup"
   },
-  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/janpoem/webpack-starter.git"
+  },
+  "keywords": ["webpack", "starter"],
   "author": "Jiankai Zeng <janpoem@163.com>",
   "license": "MIT",
   "dependencies": {
