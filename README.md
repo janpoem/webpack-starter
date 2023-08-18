@@ -7,8 +7,6 @@
 const { webpackConfig } = require('@zenstone/webpack-starter');
 
 module.exports = function(runtime) {
-  return webpackConfig({
-    runtime,
-  }).exports();
+  return webpackConfig({ runtime }).exports();
 };
 ```
