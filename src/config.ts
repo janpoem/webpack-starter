@@ -2,7 +2,6 @@ import { resolve } from 'path';
 import type { Config as SwcConfig } from '@swc/core';
 import type { Config as SvgrConfig } from '@svgr/core';
 import type { Config as PostCSSConfig } from 'postcss-load-config';
-import * as process from 'process';
 import {
   WebpackConfigOptions,
   WebpackMode,
@@ -326,7 +325,12 @@ export class WebpackConfig {
       test: /\.svg$/i,
       issuer: /\.[jt]sx?$/,
       // resourceQuery: { not: [/url/] }, // 官方示例做法，在 TS 环境并不适合
-      use: [{ loader: '@svgr/webpack', options: this.svgrLoaderOptions() }],
+      use: [
+        {
+          loader: require.resolve('@svgr/webpack'),
+          options: this.svgrLoaderOptions(),
+        },
+      ],
     };
   }
 
@@ -475,18 +479,6 @@ export class WebpackConfig {
     return loaders;
   }
 
-  /**
-   * ```js
-   * // default
-   * cssLoaderOptions()
-   * cssLoaderOptions(false)
-   * // use css module
-   * cssLoaderOptions(true)
-   * // custom options
-   * cssLoaderOptions({ ... })
-   * ```
-   * @param opts
-   */
   cssLoaderOptions(
     cssModule?: boolean,
     opts?: CSSLoaderOptions,

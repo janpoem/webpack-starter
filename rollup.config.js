@@ -18,6 +18,10 @@ export default {
       file: `${outputDir}/index.js`,
       format: 'cjs',
     },
+    {
+      file: `${outputDir}/index.mjs`,
+      format: 'es',
+    },
   ],
   plugins: [
     rmdir(outputDir),
