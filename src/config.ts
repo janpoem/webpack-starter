@@ -2,6 +2,7 @@ import { resolve } from 'path';
 import type { Config as SwcConfig } from '@swc/core';
 import type { Config as SvgrConfig } from '@svgr/core';
 import type { Config as PostCSSConfig } from 'postcss-load-config';
+import * as process from 'process';
 import {
   WebpackConfigOptions,
   WebpackMode,
@@ -54,7 +55,185 @@ const WebpackShellPluginNext = require('webpack-shell-plugin-next');
 const CopyPlugin = require('copy-webpack-plugin');
 
 export class WebpackConfig {
-  constructor(public options: WebpackConfigOptions) {}
+  options: WebpackConfigOptions = {
+    mode: 'development',
+    entryName: 'app',
+    root: process.cwd(),
+    runtime: {},
+  };
+
+  mode: WebpackMode = 'development';
+
+  devServer: WDSC = {};
+
+  entry: WRC['entry'] = {};
+
+  output: WRC['output'] = {};
+
+  devtool: WC['devtool'];
+
+  performance: WC['performance'];
+
+  cache: WC['cache'] = { type: 'memory' };
+
+  externals: WC['externals'];
+
+  optimization: WC['optimization'];
+
+  minimizer: WebpackOptimizationMinimizer = [];
+
+  splitChunks: WebpackSplitChunks = {
+    cacheGroups: {},
+  };
+
+  loaders: WebpackLoaderRecord = {};
+
+  useLoaders: WebpackLoaderKey[] = [
+    'svg',
+    'img',
+    'swc',
+    'css',
+    'cssModule',
+    'file',
+  ];
+
+  plugins: WebpackPluginRecord = {};
+
+  constructor(options?: Partial<WebpackConfigOptions>) {
+    if (options != null) {
+      Object.assign(this.options, options);
+    }
+    this.mode = this.options.mode;
+    this.devServer = {
+      historyApiFallback: true,
+      hot: true,
+      static: {
+        directory: resolve(this.options.root, 'public'),
+      },
+    };
+    this.entry = {
+      [this.options.entryName]: selectEntryFile(
+        this.options.root,
+        this.options.entryFile,
+      ),
+    };
+    this.output = {
+      path: resolve(this.options.root, `dist`),
+      filename: this.jsPathOf('[name].js'),
+      chunkFilename: this.jsPathOf('[name].[chunkhash:8].chunk.js'),
+      pathinfo: this.isDevel,
+    };
+    this.minimizer = [
+      new TerserPlugin({
+        terserOptions: {
+          parse: {
+            // we want terser to parse ecma 8 code. However, we don't want it
+            // to apply any minfication steps that turns valid ecma 5 code
+            // into invalid ecma 5 code. This is why the 'compress' and 'output'
+            // sections only apply transformations that are ecma 5 safe
+            // https://github.com/facebook/create-react-app/pull/4234
+            ecma: 2018,
+          },
+          compress: {
+            ecma: 5,
+            // warnings: false,
+            // Disabled because of an issue with Uglify breaking seemingly valid code:
+            // https://github.com/facebook/create-react-app/issues/2376
+            // Pending further investigation:
+            // https://github.com/mishoo/UglifyJS2/issues/2011
+            comparisons: false,
+            // Disabled because of an issue with Terser breaking valid code:
+            // https://github.com/facebook/create-react-app/issues/5250
+            // Pending futher investigation:
+            // https://github.com/terser-js/terser/issues/120
+            inline: 2,
+          },
+          mangle: {
+            safari10: true,
+          },
+          output: {
+            ecma: 5,
+            comments: false,
+            // Turned on because emoji and regex is not minified properly using default
+            // https://github.com/facebook/create-react-app/issues/2488
+            ascii_only: true,
+          },
+        },
+        // Use multi-process parallel running to improve the build speed
+        // Default number of concurrent runs: os.cpus().length - 1
+        parallel: true,
+      }),
+      new CSSMinimizerPlugin(),
+    ];
+    this.loaders = {
+      svg: this.svgrLoader(),
+      img: this.imgAsset(),
+      swc: this.swcLoader(),
+      css: this.cssLoader(/\.css$/, /\.module\.css$/),
+      cssModule: this.cssLoader(/\.css$/, /\.module\.css$/, {
+        cssModule: true,
+      }),
+      file: this.fileLoader(),
+    };
+    this.plugins = {
+      define: new DefinePlugin({
+        APP_NAME: JSON.stringify(
+          this.options.appName || this.options.entryName || 'Webpack App',
+        ),
+        APP_MODE: JSON.stringify(this.options.mode),
+        WEBPACK_BUNDLE: JSON.stringify(!!this.options.runtime.WEBPACK_BUNDLE),
+        WEBPACK_BUILD: JSON.stringify(!!this.options.runtime.WEBPACK_BUILD),
+        WEBPACK_SERVE: JSON.stringify(!!this.options.runtime.WEBPACK_SERVE),
+      }),
+      dotenv: new DotenvPlugin({
+        allowEmptyValues: true,
+        systemvars: true,
+        silent: true,
+        defaults: true,
+        prefix: 'import.meta.env.',
+      }),
+      html: isFile(resolve(this.options.root, 'src/index.html'))
+        ? new HTMLWebpackPlugin({
+            title:
+              this.options.appName || this.options.entryName || 'Webpack App',
+            inject: true,
+            template: resolve(this.options.root, 'src/index.html'),
+            minify: this.isDevel
+              ? {}
+              : {
+                  removeComments: true,
+                  collapseWhitespace: true,
+                  removeRedundantAttributes: true,
+                  useShortDoctype: true,
+                  removeEmptyAttributes: true,
+                  removeStyleLinkTypeAttributes: true,
+                  keepClosingSlash: true,
+                  minifyJS: true,
+                  minifyCSS: true,
+                  minifyURLs: true,
+                },
+          })
+        : undefined,
+      refresh: this.isDevel
+        ? new ReactRefreshWebpackPlugin({ overlay: false })
+        : undefined,
+      css: !this.isDevel
+        ? new MiniCSSExtractPlugin({
+            filename: this.cssPathOf('[name].css'),
+            chunkFilename: this.cssPathOf('[name].[fullhash:8].chunk.css'),
+          })
+        : undefined,
+      copy:
+        this.options.copy != null
+          ? new CopyPlugin(this.options.copy)
+          : undefined,
+      shell:
+        this.options.shell != null
+          ? new WebpackShellPluginNext(this.options.shell)
+          : undefined,
+      caseSensitive: this.isDevel ? new CaseSensitivePathsPlugin() : undefined,
+    };
+  }
 
   get isDevel(): boolean {
     return this.options.mode !== 'production';
@@ -76,126 +255,45 @@ export class WebpackConfig {
     return [this.options.filePath || 'files', path].filter(Boolean).join('/');
   }
 
-  mode: WebpackMode = 'development';
-
   setMode(mode: ValueOrSetter<WebpackMode>): this {
     this.mode = valueOrSetter(mode, this.mode ?? 'development');
     return this;
   }
-
-  devServer: WDSC = {
-    historyApiFallback: true,
-    hot: true,
-    static: {
-      directory: resolve(this.options.root, 'public'),
-    },
-  };
 
   setDevServer(opts: ValueOrSetter<WDSC>): this {
     this.devServer = valueOrSetter(opts, this.devServer ?? {});
     return this;
   }
 
-  entry: WRC['entry'] = {
-    [this.options.entryName]: selectEntryFile(
-      this.options.root,
-      this.options.entryFile,
-    ),
-  };
-
   setEntry(entry: ValueOrSetter<WRC['entry']>): this {
     this.entry = valueOrSetter(entry, this.entry ?? {});
     return this;
   }
-
-  output: WRC['output'] = {
-    path: resolve(this.options.root, `dist`),
-    filename: this.jsPathOf('[name].js'),
-    chunkFilename: this.jsPathOf('[name].[chunkhash:8].chunk.js'),
-    pathinfo: this.isDevel,
-  };
 
   setOutput(output: ValueOrSetter<WRC['output']>): this {
     this.output = valueOrSetter(output, this.output ?? {});
     return this;
   }
 
-  devtool: WC['devtool'];
-
   setDevtool(devtool: ValueOrSetter<WC['devtool']>): this {
     this.devtool = valueOrSetter(devtool, this.devtool);
     return this;
   }
-
-  performance: WC['performance'];
 
   setPerformance(performance: ValueOrSetter<WC['performance']>): this {
     this.performance = valueOrSetter(performance, this.performance);
     return this;
   }
 
-  cache: WC['cache'] = { type: 'memory' };
-
   setCache(cache: ValueOrSetter<WC['cache']>): this {
     this.cache = valueOrSetter(cache, this.cache);
     return this;
   }
 
-  externals: WC['externals'];
-
   setExternals(externals: ValueOrSetter<WC['externals']>): this {
     this.externals = valueOrSetter(externals, this.externals);
     return this;
   }
-
-  optimization: WC['optimization'];
-
-  minimizer: WebpackOptimizationMinimizer = [
-    new TerserPlugin({
-      terserOptions: {
-        parse: {
-          // we want terser to parse ecma 8 code. However, we don't want it
-          // to apply any minfication steps that turns valid ecma 5 code
-          // into invalid ecma 5 code. This is why the 'compress' and 'output'
-          // sections only apply transformations that are ecma 5 safe
-          // https://github.com/facebook/create-react-app/pull/4234
-          ecma: 2018,
-        },
-        compress: {
-          ecma: 5,
-          // warnings: false,
-          // Disabled because of an issue with Uglify breaking seemingly valid code:
-          // https://github.com/facebook/create-react-app/issues/2376
-          // Pending further investigation:
-          // https://github.com/mishoo/UglifyJS2/issues/2011
-          comparisons: false,
-          // Disabled because of an issue with Terser breaking valid code:
-          // https://github.com/facebook/create-react-app/issues/5250
-          // Pending futher investigation:
-          // https://github.com/terser-js/terser/issues/120
-          inline: 2,
-        },
-        mangle: {
-          safari10: true,
-        },
-        output: {
-          ecma: 5,
-          comments: false,
-          // Turned on because emoji and regex is not minified properly using default
-          // https://github.com/facebook/create-react-app/issues/2488
-          ascii_only: true,
-        },
-      },
-      // Use multi-process parallel running to improve the build speed
-      // Default number of concurrent runs: os.cpus().length - 1
-      parallel: true,
-    }),
-    new CSSMinimizerPlugin(),
-  ];
-
-  splitChunks: WebpackSplitChunks = {
-    cacheGroups: {},
-  };
 
   buildOptimization(): WRC['optimization'] {
     const opt = {
@@ -441,24 +539,6 @@ export class WebpackConfig {
     };
   }
 
-  loaders: WebpackLoaderRecord = {
-    svg: this.svgrLoader(),
-    img: this.imgAsset(),
-    swc: this.swcLoader(),
-    css: this.cssLoader(/\.css$/, /\.module\.css$/),
-    cssModule: this.cssLoader(/\.css$/, /\.module\.css$/, { cssModule: true }),
-    file: this.fileLoader(),
-  };
-
-  useLoaders: WebpackLoaderKey[] = [
-    'svg',
-    'img',
-    'swc',
-    'css',
-    'cssModule',
-    'file',
-  ];
-
   buildModule(): WRC['module'] {
     return {
       strictExportPresence: true,
@@ -471,63 +551,6 @@ export class WebpackConfig {
       ],
     };
   }
-
-  plugins: WebpackPluginRecord = {
-    define: new DefinePlugin({
-      APP_NAME: JSON.stringify(
-        this.options.appName || this.options.entryName || 'Webpack App',
-      ),
-      APP_MODE: JSON.stringify(this.options.mode),
-      WEBPACK_BUNDLE: JSON.stringify(!!this.options.runtime.WEBPACK_BUNDLE),
-      WEBPACK_BUILD: JSON.stringify(!!this.options.runtime.WEBPACK_BUILD),
-      WEBPACK_SERVE: JSON.stringify(!!this.options.runtime.WEBPACK_SERVE),
-    }),
-    dotenv: new DotenvPlugin({
-      allowEmptyValues: true,
-      systemvars: true,
-      silent: true,
-      defaults: true,
-      prefix: 'import.meta.env.',
-    }),
-    html: isFile(resolve(this.options.root, 'src/index.html'))
-      ? new HTMLWebpackPlugin({
-          title:
-            this.options.appName || this.options.entryName || 'Webpack App',
-          inject: true,
-          template: resolve(this.options.root, 'src/index.html'),
-          minify: this.isDevel
-            ? {}
-            : {
-                removeComments: true,
-                collapseWhitespace: true,
-                removeRedundantAttributes: true,
-                useShortDoctype: true,
-                removeEmptyAttributes: true,
-                removeStyleLinkTypeAttributes: true,
-                keepClosingSlash: true,
-                minifyJS: true,
-                minifyCSS: true,
-                minifyURLs: true,
-              },
-        })
-      : undefined,
-    refresh: this.isDevel
-      ? new ReactRefreshWebpackPlugin({ overlay: false })
-      : undefined,
-    css: !this.isDevel
-      ? new MiniCSSExtractPlugin({
-          filename: this.cssPathOf('[name].css'),
-          chunkFilename: this.cssPathOf('[name].[fullhash:8].chunk.css'),
-        })
-      : undefined,
-    copy:
-      this.options.copy != null ? new CopyPlugin(this.options.copy) : undefined,
-    shell:
-      this.options.shell != null
-        ? new WebpackShellPluginNext(this.options.shell)
-        : undefined,
-    caseSensitive: this.isDevel ? new CaseSensitivePathsPlugin() : undefined,
-  };
 
   buildPlugins(): WRC['plugins'] {
     return Object.values(this.plugins).filter(Boolean);
