@@ -215,8 +215,6 @@ export type WebpackConfigOptions = {
   entry?: WebpackEntry;
   copy?: WebpackCopyPluginOptions;
   shell?: WebpackShellPluginOptions;
-  rules?: WebpackLoaderRule[];
-  plugins?: WebpackPluginInstance[];
   jsPath?: string;
   cssPath?: string;
   imgPath?: string;

@@ -79,6 +79,8 @@ export class WebpackStarter {
 
   optimization: WC['optimization'];
 
+  minimize = false;
+
   minimizer: WebpackOptimizationMinimizer = [];
 
   splitChunks: WebpackSplitChunks = {
@@ -97,6 +99,8 @@ export class WebpackStarter {
   ];
 
   plugins: WebpackPluginRecord = {};
+
+  resolve: WC['resolve'] = {};
 
   static create(options?: Partial<WebpackConfigOptions>): WebpackStarter {
     return new WebpackStarter(options);
@@ -124,6 +128,7 @@ export class WebpackStarter {
       chunkFilename: this.jsPathOf('[name].[chunkhash:8].chunk.js'),
       pathinfo: this.isDevel,
     };
+    this.minimize = !this.isDevel;
     this.minimizer = [
       new TerserPlugin({
         terserOptions: {
@@ -231,6 +236,12 @@ export class WebpackStarter {
           : undefined,
       caseSensitive: this.isDevel ? new CaseSensitivePathsPlugin() : undefined,
     };
+
+    this.resolve = {
+      modules: ['node_modules'],
+      extensions: ['.mjs', '.js', '.cjs', 'jsx', '.ts', '.tsx', '.wasm'],
+      plugins: [new TsconfigPathsPlugin({})],
+    };
   }
 
   get isDevel(): boolean {
@@ -295,7 +306,7 @@ export class WebpackStarter {
 
   buildOptimization(): WRC['optimization'] {
     const opt = {
-      minimize: !this.isDevel,
+      minimize: this.minimize,
       ...this.optimization,
     };
     if (opt.minimizer == null) {
@@ -306,12 +317,6 @@ export class WebpackStarter {
     }
     return opt;
   }
-
-  resolve: WC['resolve'] = {
-    modules: ['node_modules'],
-    extensions: ['.mjs', '.js', '.cjs', 'jsx', '.ts', '.tsx', '.wasm'],
-    plugins: [new TsconfigPathsPlugin({})],
-  };
 
   setResolve(value: ValueOrSetter<WC['resolve']>): this {
     this.resolve = valueOrSetter(value, this.resolve);
