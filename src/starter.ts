@@ -131,7 +131,7 @@ export class WebpackStarter {
     this.minimize = !this.isDevel;
     this.minimizer = [
       new TerserPlugin({
-        minify: TerserPlugin.swcMinify,
+        // minify: TerserPlugin.swcMinify,
         terserOptions: {
           parse: {
             // we want terser to parse ecma 8 code. However, we don't want it
@@ -171,7 +171,7 @@ export class WebpackStarter {
         parallel: true,
       }),
       new CSSMinimizerPlugin({
-        minify: CSSMinimizerPlugin.swcMinify,
+        // minify: CSSMinimizerPlugin.swcMinify,
       }),
     ];
     this.loaders = {
