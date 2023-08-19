@@ -10,3 +10,14 @@ body {
   background-size: contain;
   min-height: 100%;
 }
+
+.svg-icon {
+  display: inline-block;
+  font-size: inherit;
+  vertical-align: middle;
+  width: 100px;
+  height: 100px;
+  background: url("./img/3.svg") center center no-repeat;
+  color: red;
+}
+

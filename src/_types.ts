@@ -176,7 +176,7 @@ export interface CSSLoaderOptions {
 /////////////////////////////////////////////////////////////////////////
 export {
   WebpackCopyPluginOptions,
-  WebpackShellPluginOptions,
+  // WebpackShellPluginOptions,
   SwcConfig,
   SvgrConfig,
   PostCSSConfig,

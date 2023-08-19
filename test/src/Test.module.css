@@ -1,0 +1,12 @@
+.flex {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+}
+
+.flexCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  align-items: center;
+}

@@ -13,7 +13,6 @@
     "skipLibCheck": true,
     "pretty": true,
     "outDir": "dist",
-    "baseUrl": "./",
     "types": [
       "node",
       "mocha",

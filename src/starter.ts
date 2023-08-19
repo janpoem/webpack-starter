@@ -71,7 +71,7 @@ export class WebpackStarter {
 
   devtool: WC['devtool'];
 
-  performance: WC['performance'];
+  performance: WC['performance'] = false;
 
   cache: WC['cache'] = { type: 'memory' };
 
@@ -131,6 +131,7 @@ export class WebpackStarter {
     this.minimize = !this.isDevel;
     this.minimizer = [
       new TerserPlugin({
+        minify: TerserPlugin.swcMinify,
         terserOptions: {
           parse: {
             // we want terser to parse ecma 8 code. However, we don't want it
@@ -169,14 +170,16 @@ export class WebpackStarter {
         // Default number of concurrent runs: os.cpus().length - 1
         parallel: true,
       }),
-      new CSSMinimizerPlugin(),
+      new CSSMinimizerPlugin({
+        minify: CSSMinimizerPlugin.swcMinify,
+      }),
     ];
     this.loaders = {
       svg: this.svgrLoader(),
       img: this.imgAsset(),
       swc: this.swcLoader(),
       css: this.cssLoader(/\.css$/, /\.module\.css$/),
-      cssModule: this.cssLoader(/\.css$/, /\.module\.css$/, {
+      cssModule: this.cssLoader(/\.module\.css$/, null, {
         cssModule: true,
       }),
       file: this.fileLoader(),
@@ -242,7 +245,11 @@ export class WebpackStarter {
       extensions: ['.mjs', '.js', '.cjs', 'jsx', '.ts', '.tsx', '.wasm'],
       plugins: [new TsconfigPathsPlugin({})],
     };
+
+    this.onConstructor();
   }
+
+  onConstructor(): void {}
 
   get isDevel(): boolean {
     return this.options.mode !== 'production';
@@ -348,6 +355,12 @@ export class WebpackStarter {
             name: 'preset-default',
             params: {},
           },
+          {
+            name: 'removeAttrs',
+            params: {
+              attrs: '(height|width)',
+            },
+          },
         ],
       },
     };
@@ -402,7 +415,7 @@ export class WebpackStarter {
 
   imgAsset(): WebpackLoaderRule {
     return {
-      test: /\.(png|jpg|gif)$/i,
+      test: /\.(png|jpg|gif|svg|webp)$/i,
       generator: {
         filename: this.imgPathOf('[name][ext][query]'),
       },
@@ -427,7 +440,7 @@ export class WebpackStarter {
 
   cssLoader(
     test: RegExp | string | ((value: string) => boolean),
-    exclude?: RegExp | string | ((value: string) => boolean),
+    exclude?: RegExp | string | ((value: string) => boolean) | null,
     options?: boolean | UseCSSLoaderOptions,
   ): WebpackLoaderRule {
     let opts: UseCSSLoaderOptions = {};
@@ -439,7 +452,7 @@ export class WebpackStarter {
     const isCssModule = !!opts?.cssModule;
     return {
       test,
-      exclude,
+      exclude: exclude == null ? undefined : exclude,
       use: this.useCssLoaders(opts ?? {}),
       sideEffects: isCssModule ? undefined : true,
     };

@@ -1,6 +1,6 @@
 {
   "name": "@zenstone/webpack-starter",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "",
   "files": ["dist"],
   "main": "dist/index.js",
@@ -42,8 +42,6 @@
     "autoprefixer": "^10.4.14",
     "mini-css-extract-plugin": "^2.7.6",
     "css-minimizer-webpack-plugin": "^5.0.1",
-    "windicss": "^3.5.6",
-    "windicss-webpack-plugin": "^1.7.8",
     "@svgr/core": "^8.1.0",
     "@svgr/webpack": "^8.0.1",
     "react-dev-utils": "^12.0.1",
@@ -66,7 +64,8 @@
     "chai": "^4.3.7",
     "@types/chai": "^4.3.5",
     "rollup": "^3.28.0",
-    "rollup-plugin-ts": "^3.4.4",
+    "rollup-plugin-swc3": "^0.9.1",
+    "rollup-plugin-dts": "^6.0.0",
     "@rollup/plugin-commonjs": "^25.0.4",
     "@rollup/plugin-node-resolve": "^15.2.0",
     "react": "^18.2.0",
@@ -79,8 +78,6 @@
     "eslint": "^8.47.0",
     "@typescript-eslint/parser": "^6.4.0",
     "@typescript-eslint/eslint-plugin": "^6.4.0",
-    "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
     "prettier": "^3.0.2"
   },
   "peerDependencies": {

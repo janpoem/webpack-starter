@@ -172,3 +172,73 @@ starter.splitChunks = {};
 starter.export();
 ```
 
+## Issues
+
+### @babel/core 的引用
+
+`@svgr/webpack` 和 `@svgr/core` 目前依赖于 `@babel/core` ，暂无替代方案。
+
+### .swcrc 父目录的影响
+
+```
+├── packages
+│   └── app
+│       ├── **/*.[ts|tsx]
+│       └── webpack.config.js
+├── .swcrc (1)
+└── .gitignore
+```
+
+目前为了简化 webpack 的目录结构，将 swc 的配置放入了 loader 中，如：
+
+```js
+const swcLoaderOptions = {
+  jsc: {
+    parser: {
+      syntax: 'typescript',
+      tsx: true,
+      // jsx: true,
+      decorators: true,
+      dynamicImport: true,
+    },
+    loose: false,
+    externalHelpers: true,
+    transform: {
+      legacyDecorator: true,
+      decoratorMetadata: true,
+      optimizer: {
+        simplify: true,
+      },
+      react: {
+        runtime: 'automatic',
+        importSource: 'react',
+        refresh: this.isDevel,
+      },
+    },
+  },
+  env: {
+    targets: ['defaults'],
+    mode: 'entry',
+    coreJs: '3',
+  },
+  sourceMaps: true,
+};
+```
+
+但目前版本的 swc-loader ，假定目录内存在 `.swcrc` (1) 文件，会将 `.swcrc` (1) 和 swcLoaderOptions 的配置进行合并。
+
+所以如果 `.swcrc` (1) 中定义了 `jsc.target` ，则会导致启动 webpack 时，报错 `jsc.target` 和 `env.targets` 不能同时存在。
+
+解决的办法，是在子项目目录额外添加一个 `.swcrc` (2) 文件，结构如下：
+
+```
+├── packages
+│   └── app
+│       ├── **/*.[ts|tsx]
+│       ├── .swcrc (2)
+│       └── webpack.config.js
+├── .swcrc (1)
+└── .gitignore
+```
+
+确保 `.swcrc` (2) 的内容，为符合 webpack 运行所需的配置即可。
