@@ -53,10 +53,10 @@ const WebpackShellPluginNext = require('webpack-shell-plugin-next');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const CopyPlugin = require('copy-webpack-plugin');
 
-export class WebpackConfig {
+export class WebpackStarter {
   options: WebpackConfigOptions = {
     mode: 'development',
-    entryName: 'app',
+    appName: 'Webpack App',
     root: process.cwd(),
     runtime: {},
   };
@@ -98,23 +98,25 @@ export class WebpackConfig {
 
   plugins: WebpackPluginRecord = {};
 
+  static create(options?: Partial<WebpackConfigOptions>): WebpackStarter {
+    return new WebpackStarter(options);
+  }
+
   constructor(options?: Partial<WebpackConfigOptions>) {
     if (options != null) {
       Object.assign(this.options, options);
     }
     this.mode = this.options.mode;
     this.devServer = {
-      historyApiFallback: true,
+      historyApiFallback: this.options.historyApiFallback,
       hot: true,
       static: {
         directory: resolve(this.options.root, 'public'),
       },
+      proxy: this.options.proxy,
     };
-    this.entry = {
-      [this.options.entryName]: selectEntryFile(
-        this.options.root,
-        this.options.entryFile,
-      ),
+    this.entry = this.options.entry || {
+      main: selectEntryFile(this.options.root),
     };
     this.output = {
       path: resolve(this.options.root, `dist`),
@@ -176,9 +178,7 @@ export class WebpackConfig {
     };
     this.plugins = {
       define: new DefinePlugin({
-        APP_NAME: JSON.stringify(
-          this.options.appName || this.options.entryName || 'Webpack App',
-        ),
+        APP_NAME: JSON.stringify(this.options.appName),
         APP_MODE: JSON.stringify(this.options.mode),
         WEBPACK_BUNDLE: JSON.stringify(!!this.options.runtime.WEBPACK_BUNDLE),
         WEBPACK_BUILD: JSON.stringify(!!this.options.runtime.WEBPACK_BUILD),
@@ -193,8 +193,7 @@ export class WebpackConfig {
       }),
       html: isFile(resolve(this.options.root, 'src/index.html'))
         ? new HTMLWebpackPlugin({
-            title:
-              this.options.appName || this.options.entryName || 'Webpack App',
+            title: this.options.appName,
             inject: true,
             template: resolve(this.options.root, 'src/index.html'),
             minify: this.isDevel
@@ -548,8 +547,8 @@ export class WebpackConfig {
     return Object.values(this.plugins).filter(Boolean);
   }
 
-  export(): WC {
-    return {
+  export(callback?: (config: WC) => void): WC {
+    const config = {
       mode: this.mode,
       entry: this.entry,
       output: this.output,
@@ -563,5 +562,9 @@ export class WebpackConfig {
       module: this.buildModule(),
       plugins: this.buildPlugins(),
     };
+    if (typeof callback === 'function') {
+      callback(config);
+    }
+    return config;
   }
 }

@@ -17,6 +17,8 @@ import type { Config as PostCSSConfig } from 'postcss-load-config';
 
 export type WebpackRequiredConfiguration = Required<Configuration>;
 
+export type WebpackEntry = Configuration['entry'];
+
 export type WebpackConfiguration = Configuration;
 export { WebpackDevServerConfiguration };
 
@@ -192,27 +194,8 @@ export type WebpackRuntime = {
 
 export type WebpackMode = 'development' | 'production';
 
-export type WebpackEntrySingleFile = {
-  /**
-   * 入口文件名称
-   *
-   * ```
-   * {
-   *   entry: {
-   *     [entryName]: entryFile
-   *   }
-   * }
-   * ```
-   */
-  entryName: string;
-  /**
-   * 入口文件
-   * default: root/src/index.[ts|tsx]
-   */
-  entryFile?: string;
-};
-
 export type WebpackConfigOptions = {
+  appName: string;
   /**
    * Webpack 运行模式
    */
@@ -229,7 +212,7 @@ export type WebpackConfigOptions = {
    * Webpack 运行时基础参数
    */
   runtime: WebpackRuntime;
-  appName?: string;
+  entry?: WebpackEntry;
   copy?: WebpackCopyPluginOptions;
   shell?: WebpackShellPluginOptions;
   rules?: WebpackLoaderRule[];
@@ -238,7 +221,9 @@ export type WebpackConfigOptions = {
   cssPath?: string;
   imgPath?: string;
   filePath?: string;
-} & WebpackEntrySingleFile;
+  historyApiFallback?: WebpackDevServerConfiguration['historyApiFallback'];
+  proxy?: WebpackDevServerConfiguration['proxy'];
+};
 
 export type UseCSSLoaderOptions = {
   cssModule?: boolean;

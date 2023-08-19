@@ -1,23 +1,16 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { webpackConfig } = require('../dist');
+const Starter = require('../dist');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Webpack = require('webpack');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const DevServer = require('webpack-dev-server');
 
-const config = webpackConfig({
-  mode: 'development',
+const starter = Starter.create({
   root: __dirname,
-  entryName: 'app',
-  runtime: {
-    WEBPACK_BUILD: false,
-    WEBPACK_BUNDLE: false,
-    WEBPACK_SERVE: false,
-  },
-});
-const compiler = Webpack(config.export());
+}).setDevServer(it => (it.open = true) && it);
+const compiler = Webpack(starter.export(console.log));
 
-const server = new DevServer(config.devServer, compiler);
+const server = new DevServer(starter.devServer, compiler);
 
 const runServer = async () => {
   console.log('Starting server...');

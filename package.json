@@ -1,6 +1,6 @@
 {
   "name": "@zenstone/webpack-starter",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "files": ["dist"],
   "main": "dist/index.js",
@@ -8,7 +8,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "ts-node test/webpack.ts",
-    "test-js": "pnpm rollup && node test/index.js",
+    "test-js": "node test/index.js",
     "eslint": "eslint src --ext .ts,.tsx,.js,.jsx",
     "tscheck": "tsc --noEmit",
     "rollup": "rollup -c --bundleConfigAsCjs",
