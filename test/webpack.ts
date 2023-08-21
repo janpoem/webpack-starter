@@ -7,7 +7,7 @@ import WebpackStarter from '../src';
 const starter = WebpackStarter.create({
   root: __dirname,
 }).setDevServer(it => {
-  it.open = true;
+  // it.open = true;
   return it;
 });
 const compiler = Webpack(starter.export(console.log));

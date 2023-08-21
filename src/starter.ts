@@ -1,13 +1,13 @@
 import { resolve } from 'path';
-import type { Config as SwcConfig } from '@swc/core';
-import type { Config as SvgrConfig } from '@svgr/core';
-import type { Config as PostCSSConfig } from 'postcss-load-config';
+import { type Config as SwcConfig } from '@swc/types';
+import { type Config as SvgrConfig } from '@svgr/core';
+import { type Config as PostCSSConfig } from 'postcss-load-config';
 import {
   WebpackConfigOptions,
   WebpackMode,
-  WebpackRequiredConfiguration as WRC,
-  WebpackDevServerConfiguration as WDSC,
-  WebpackConfiguration as WC,
+  WebpackRequiredConfiguration,
+  WebpackDevServerConfiguration,
+  WebpackConfiguration,
   WebpackOptimizationMinimizer,
   WebpackSplitChunks,
   WebpackLoaderRule,
@@ -63,21 +63,21 @@ export class WebpackStarter {
 
   mode: WebpackMode = 'development';
 
-  devServer: WDSC = {};
+  devServer: WebpackDevServerConfiguration = {};
 
-  entry: WRC['entry'] = {};
+  entry: WebpackRequiredConfiguration['entry'] = {};
 
-  output: WRC['output'] = {};
+  output: WebpackRequiredConfiguration['output'] = {};
 
-  devtool: WC['devtool'];
+  devtool: WebpackConfiguration['devtool'];
 
-  performance: WC['performance'] = false;
+  performance: WebpackConfiguration['performance'] = false;
 
-  cache: WC['cache'] = { type: 'memory' };
+  cache: WebpackConfiguration['cache'] = { type: 'memory' };
 
-  externals: WC['externals'];
+  externals: WebpackConfiguration['externals'];
 
-  optimization: WC['optimization'];
+  optimization: WebpackConfiguration['optimization'];
 
   minimize = false;
 
@@ -100,7 +100,7 @@ export class WebpackStarter {
 
   plugins: WebpackPluginRecord = {};
 
-  resolve: WC['resolve'] = {};
+  resolve: WebpackConfiguration['resolve'] = {};
 
   static create(options?: Partial<WebpackConfigOptions>): WebpackStarter {
     return new WebpackStarter(options);
@@ -130,6 +130,15 @@ export class WebpackStarter {
     };
     this.minimize = !this.isDevel;
     this.minimizer = [
+      // new TerserPlugin({
+      //   terserOptions: {
+      //     parse: {
+      //       ecmaVersion: 2018,
+      //     },
+      //     ecma: 2018,
+      //     parallel: true,
+      //   },
+      // }),
       new TerserPlugin({
         // minify: TerserPlugin.swcMinify,
         terserOptions: {
@@ -144,9 +153,10 @@ export class WebpackStarter {
           compress: {
             ecma: 5,
             // warnings: false,
-            // Disabled because of an issue with Uglify breaking seemingly valid code:
-            // https://github.com/facebook/create-react-app/issues/2376
-            // Pending further investigation:
+            // Disabled because of an issue with Uglify breaking seemingly
+            // valid code:
+            // https://github.com/facebook/create-react-app/issues/2376 Pending
+            // further investigation:
             // https://github.com/mishoo/UglifyJS2/issues/2011
             comparisons: false,
             // Disabled because of an issue with Terser breaking valid code:
@@ -161,8 +171,8 @@ export class WebpackStarter {
           output: {
             ecma: 5,
             comments: false,
-            // Turned on because emoji and regex is not minified properly using default
-            // https://github.com/facebook/create-react-app/issues/2488
+            // Turned on because emoji and regex is not minified properly using
+            // default https://github.com/facebook/create-react-app/issues/2488
             ascii_only: true,
           },
         },
@@ -276,42 +286,48 @@ export class WebpackStarter {
     return this;
   }
 
-  setDevServer(opts: ValueOrSetter<WDSC>): this {
+  setDevServer(opts: ValueOrSetter<WebpackDevServerConfiguration>): this {
     this.devServer = valueOrSetter(opts, this.devServer ?? {});
     return this;
   }
 
-  setEntry(entry: ValueOrSetter<WRC['entry']>): this {
+  setEntry(entry: ValueOrSetter<WebpackRequiredConfiguration['entry']>): this {
     this.entry = valueOrSetter(entry, this.entry ?? {});
     return this;
   }
 
-  setOutput(output: ValueOrSetter<WRC['output']>): this {
+  setOutput(
+    output: ValueOrSetter<WebpackRequiredConfiguration['output']>,
+  ): this {
     this.output = valueOrSetter(output, this.output ?? {});
     return this;
   }
 
-  setDevtool(devtool: ValueOrSetter<WC['devtool']>): this {
+  setDevtool(devtool: ValueOrSetter<WebpackConfiguration['devtool']>): this {
     this.devtool = valueOrSetter(devtool, this.devtool);
     return this;
   }
 
-  setPerformance(performance: ValueOrSetter<WC['performance']>): this {
+  setPerformance(
+    performance: ValueOrSetter<WebpackConfiguration['performance']>,
+  ): this {
     this.performance = valueOrSetter(performance, this.performance);
     return this;
   }
 
-  setCache(cache: ValueOrSetter<WC['cache']>): this {
+  setCache(cache: ValueOrSetter<WebpackConfiguration['cache']>): this {
     this.cache = valueOrSetter(cache, this.cache);
     return this;
   }
 
-  setExternals(externals: ValueOrSetter<WC['externals']>): this {
+  setExternals(
+    externals: ValueOrSetter<WebpackConfiguration['externals']>,
+  ): this {
     this.externals = valueOrSetter(externals, this.externals);
     return this;
   }
 
-  buildOptimization(): WRC['optimization'] {
+  buildOptimization(): WebpackRequiredConfiguration['optimization'] {
     const opt = {
       minimize: this.minimize,
       ...this.optimization,
@@ -325,7 +341,7 @@ export class WebpackStarter {
     return opt;
   }
 
-  setResolve(value: ValueOrSetter<WC['resolve']>): this {
+  setResolve(value: ValueOrSetter<WebpackConfiguration['resolve']>): this {
     this.resolve = valueOrSetter(value, this.resolve);
     return this;
   }
@@ -548,7 +564,7 @@ export class WebpackStarter {
     };
   }
 
-  buildModule(): WRC['module'] {
+  buildModule(): WebpackRequiredConfiguration['module'] {
     return {
       strictExportPresence: true,
       rules: [
@@ -561,11 +577,13 @@ export class WebpackStarter {
     };
   }
 
-  buildPlugins(): WRC['plugins'] {
+  buildPlugins(): WebpackRequiredConfiguration['plugins'] {
     return Object.values(this.plugins).filter(Boolean);
   }
 
-  export(callback?: (config: WC) => void): WC {
+  export(
+    callback?: (config: WebpackConfiguration) => void,
+  ): WebpackConfiguration {
     const config = {
       mode: this.mode,
       entry: this.entry,

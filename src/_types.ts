@@ -6,10 +6,12 @@ import type {
 } from 'webpack';
 import type { PluginOptions as WebpackCopyPluginOptions } from 'copy-webpack-plugin';
 import { Options as WebpackShellPluginOptions } from 'webpack-shell-plugin-next/lib/types';
-import type { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
+import type { Configuration as WDSConfiguration } from 'webpack-dev-server';
 import type { Config as SwcConfig } from '@swc/core';
 import type { Config as SvgrConfig } from '@svgr/core';
 import type { Config as PostCSSConfig } from 'postcss-load-config';
+
+export type WebpackDevServerConfiguration = WDSConfiguration;
 
 /////////////////////////////////////////////////////////////////////////
 // Webpack known types
@@ -20,7 +22,6 @@ export type WebpackRequiredConfiguration = Required<Configuration>;
 export type WebpackEntry = Configuration['entry'];
 
 export type WebpackConfiguration = Configuration;
-export { WebpackDevServerConfiguration };
 
 export type WebpackOptimization = WebpackRequiredConfiguration['optimization'];
 
