@@ -16,13 +16,11 @@
       "decoratorMetadata": true,
       "optimizer": {
         "simplify": true
-      },
-      "react": {
-        "runtime": "automatic",
-        "importSource": "react",
-        "refresh": true
       }
     }
+  },
+  "module": {
+    "type": true
   },
   "sourceMaps": true
 }

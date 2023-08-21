@@ -11,7 +11,7 @@ module.exports = {
     node: true,
     mocha: true,
   },
-  ignorePatterns: ['node_modules', 'dist'],
+  ignorePatterns: ['node_modules', 'dist', '*.config.js'],
   rules: {
     '@typescript-eslint/ban-ts-comment': [
       ERROR,

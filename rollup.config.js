@@ -1,6 +1,5 @@
 import fs from 'fs';
 import { resolve } from 'path';
-// import ts from 'rollup-plugin-ts';
 import { swc } from 'rollup-plugin-swc3';
 import { dts } from 'rollup-plugin-dts';
 import commonjs from '@rollup/plugin-commonjs';
@@ -9,20 +8,23 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 const outputDir = resolve('./dist');
 
 const rmdir = dir =>
+  dir &&
   fs.existsSync(dir) &&
   fs.statSync(dir).isDirectory() &&
   fs.rmSync(dir, { recursive: true });
+
+const joinPath = (...segments) => segments.filter(Boolean).join('/');
 
 export default [
   {
     input: 'src/index.ts',
     output: [
       {
-        file: `${outputDir}/index.js`,
+        file: joinPath(outputDir, 'index.js'),
         format: 'cjs',
       },
       {
-        file: `${outputDir}/index.mjs`,
+        file: joinPath(outputDir, 'index.mjs'),
         format: 'es',
         exports: 'named',
       },
@@ -43,7 +45,12 @@ export default [
   },
   {
     input: 'src/index.ts',
-    output: [{ file: `${outputDir}/index.d.ts`, format: 'es' }],
+    output: [
+      {
+        file: joinPath(outputDir, 'index.d.ts'),
+        format: 'es',
+      },
+    ],
     plugins: [dts()],
   },
 ];
