@@ -19,5 +19,8 @@
       }
     }
   },
+  "module": {
+    "type": true
+  },
   "sourceMaps": true
 }
